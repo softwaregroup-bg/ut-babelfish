@@ -1,6 +1,6 @@
 {
   "name": "ut-babelfish",
-  "version": "7.12.0",
+  "version": "7.47.0",
   "main": "index.js",
   "browser": "browser.js",
   "dependencies": {
