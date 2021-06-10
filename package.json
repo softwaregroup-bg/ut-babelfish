@@ -1,6 +1,6 @@
 {
   "name": "ut-babelfish",
-  "version": "7.47.0",
+  "version": "7.48.0",
   "main": "index.js",
   "browser": "browser.js",
   "dependencies": {
@@ -18,8 +18,7 @@
     "tap": "^14.11.0",
     "ut-tools": "^6.37.0"
   },
-  "peerDependencies": {
-  },
+  "peerDependencies": {},
   "description": "UT crypto proxy",
   "scripts": {
     "lint": "ut-lint .",
