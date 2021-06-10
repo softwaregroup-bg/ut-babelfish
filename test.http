@@ -1,0 +1,29 @@
+### login
+# @name login
+POST http://localhost:8091/rpc/login/identity/check
+content-type: application/json
+
+{
+    "jsonrpc":"2.0",
+    "id":1,
+    "method":"login.identity.check",
+    "params":{
+        "username":"sa",
+        "password": "123",
+        "channel":"web"
+    }
+}
+
+### jwt
+@token = {{login.response.body.$.result.access_token}}
+POST http://localhost:8091/rpc/user/permission/get
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "jsonrpc": "2.0",
+    "method": "user.permission.get",
+    "id": 1,
+    "params": {
+    }
+}
