@@ -138,16 +138,21 @@ const babelfish = module.exports = async function babelfish() {
                     let onResponse;
                     if (request.headers['content-type'] === 'application/json') {
                         const payload = bourne.parse(request.payload.toString('utf8'));
-                        const identityCheck = (payload.method === 'login.identity.check') ? {
-                            mlsk: mle.sign,
-                            mlek: mle.encrypt
-                        } : undefined;
-                        logger?.info(`Encrypting ${request.path}`);
-                        payload.params = jose.signEncrypt(payload.params, targetKeys.encrypt, identityCheck);
-                        if (identityCheck) {
-                            path = '/rpc/login/identity/exchange';
-                            payload.method = 'login.identity.exchange';
+
+                        let keys;
+                        const identityCheck = ['login.identity.check'].includes(payload.method);
+                        if (identityCheck || payload.method.split('.').pop() === 'exchange') {
+                            keys = {
+                                mlsk: mle.sign,
+                                mlek: mle.encrypt
+                            };
+                            if (identityCheck) {
+                                path = '/rpc/login/identity/exchange';
+                                payload.method = 'login.identity.exchange';
+                            }
                         }
+                        logger?.info(`Encrypting ${request.path}`);
+                        payload.params = jose.signEncrypt(payload.params, targetKeys.encrypt, keys);
                         request.payload = JSON.stringify(payload);
                         onResponse = async function DecryptVerify(e, res, request, h, settings, ttl) {
                             const payload = await Wreck.read(res, {json: 'strict', gunzip: true});
