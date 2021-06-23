@@ -139,8 +139,8 @@ const babelfish = module.exports = async function babelfish() {
                     if (request.headers['content-type'] === 'application/json') {
                         const payload = bourne.parse(request.payload.toString('utf8'));
 
-                        let keys = undefined;
-                        let identityCheck = ['login.identity.check'].includes(payload.method);
+                        let keys;
+                        const identityCheck = ['login.identity.check'].includes(payload.method);
                         if (identityCheck || payload.method.split('.').pop() === 'exchange') {
                             keys = {
                                 mlsk: mle.sign,
