@@ -193,7 +193,7 @@ const babelfish = module.exports = async function babelfish(config) {
                             });
                         }
                     }
-            }, route))
+            }, route));
         });
 
         logger?.info(`Starting on ${server.host}:${server.port}`);
