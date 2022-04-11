@@ -9,7 +9,7 @@ const cert = require('ut-bus/cert');
 const merge = require('ut-function.merge');
 const got = require('got');
 
-const babelfish = module.exports = async function babelfish() {
+const babelfish = module.exports = async function babelfish(config) {
     const {
         server,
         proxy: {
@@ -21,7 +21,7 @@ const babelfish = module.exports = async function babelfish() {
         mle
     } = utConfig.load({
         resolve: module.resolve,
-        config: {
+        config: merge({
             implementation: 'babelfish',
             log: {
                 level: 'info',
@@ -83,7 +83,7 @@ const babelfish = module.exports = async function babelfish() {
                     alg: 'ECDH-ES+A256KW'
                 }
             }
-        }
+        }, config)
     });
 
     const logger = new Logger({...utLog, streams: Object.values(utLog.streams)}).createLog(log.level, log);
@@ -125,76 +125,80 @@ const babelfish = module.exports = async function babelfish() {
         httpServer.events.on('log', event => logger?.info(event));
         httpServer.events.on('start', () => logger?.info('Started', httpServer.info));
 
-        mle.routes.forEach(route => httpServer.route(merge({
-            method: 'POST',
-            options: {
-                payload: {
-                    parse: false,
-                    output: 'data',
-                    allow: ['application/json', 'application/x-www-form-urlencoded']
-                },
-                handler(request, h) {
-                    let path = '{path}';
-                    let onResponse;
-                    if (request.headers['content-type'] === 'application/json') {
-                        const payload = bourne.parse(request.payload.toString('utf8'));
-
-                        let keys;
-                        const identityCheck = ['login.identity.check'].includes(payload.method);
-                        if (identityCheck || payload.method.split('.').pop() === 'exchange') {
-                            keys = {
-                                mlsk: mle.sign,
-                                mlek: mle.encrypt
-                            };
-                            if (identityCheck) {
-                                path = '/rpc/login/identity/exchange';
-                                payload.method = 'login.identity.exchange';
-                            }
-                        }
-                        logger?.info(`Encrypting ${request.path}`);
-                        payload.params = jose.signEncrypt(payload.params, targetKeys.encrypt, keys);
-                        request.payload = JSON.stringify(payload);
-                        onResponse = async function DecryptVerify(e, res, request, h, settings, ttl) {
-                            const payload = await Wreck.read(res, {json: 'strict', gunzip: true});
-                            logger?.info(`Decrypting ${request.path}`);
-                            if (payload.error) payload.error = jose.decryptVerify(payload.error, targetKeys.sign);
-                            if (payload.result) payload.result = jose.decryptVerify(payload.result, targetKeys.sign);
-                            const response = h.response(JSON.stringify(payload));
-                            response.headers = res.headers;
-                            delete response.headers['content-length'];
-                            delete response.headers['content-encoding'];
-                            delete response.headers['transfer-encoding'];
-                            return response;
-                        };
-                    }
-                    return h.proxy({
-                        ...proxy,
-                        uri: proxy.uri + path,
-                        onResponse
-                    });
-                }
-            }
-        }, typeof route === 'string' ? {path: route} : route)));
-
-        httpServer.route({
+        mle.routes.concat({
             method: '*',
             path: '/{p*}',
-            options: {
-                auth: false,
-                payload: {
-                    parse: false,
-                    output: 'stream'
-                },
-                handler: {
-                    proxy: {
-                        uri: proxy.uri
+            auth: false
+        }).forEach(routeConfig => {
+            const {auth, ...route} = typeof routeConfig === 'string' ? {path: routeConfig} : routeConfig;
+            return httpServer.route(merge({
+                method: 'POST',
+                options: auth === false
+                    ? {
+                        auth: false,
+                        payload: {
+                            parse: false,
+                            output: 'stream'
+                        },
+                        handler: {
+                            proxy: {
+                                uri: proxy.uri
+                            }
+                        }
                     }
-                }
-            }
+                    : {
+                        payload: {
+                            parse: false,
+                            output: 'data',
+                            allow: ['application/json', 'application/x-www-form-urlencoded']
+                        },
+                        handler(request, h) {
+                            let path = '{path}';
+                            let onResponse;
+                            if (request.headers['content-type'] === 'application/json') {
+                                const payload = bourne.parse(request.payload.toString('utf8'));
+
+                                let keys;
+                                const identityCheck = ['login.identity.check'].includes(payload.method);
+                                if (identityCheck || auth === 'exchange' || payload.method.split('.').pop() === 'exchange') {
+                                    keys = {
+                                        mlsk: mle.sign,
+                                        mlek: mle.encrypt
+                                    };
+                                    if (identityCheck) {
+                                        path = '/rpc/login/identity/exchange';
+                                        payload.method = 'login.identity.exchange';
+                                    }
+                                }
+                                logger?.info(`Encrypting ${request.path}`);
+                                payload.params = jose.signEncrypt(payload.params, targetKeys.encrypt, keys);
+                                request.payload = JSON.stringify(payload);
+                                onResponse = async function DecryptVerify(e, res, request, h, settings, ttl) {
+                                    const payload = await Wreck.read(res, {json: 'strict', gunzip: true});
+                                    logger?.info(`Decrypting ${request.path}`);
+                                    if (payload.error) payload.error = jose.decryptVerify(payload.error, targetKeys.sign);
+                                    if (payload.result) payload.result = jose.decryptVerify(payload.result, targetKeys.sign);
+                                    const response = h.response(JSON.stringify(payload));
+                                    response.headers = res.headers;
+                                    delete response.headers['content-length'];
+                                    delete response.headers['content-encoding'];
+                                    delete response.headers['transfer-encoding'];
+                                    return response;
+                                };
+                            }
+                            return h.proxy({
+                                ...proxy,
+                                uri: proxy.uri + path,
+                                onResponse
+                            });
+                        }
+                    }
+            }, route))
         });
 
         logger?.info(`Starting on ${server.host}:${server.port}`);
         await httpServer.start();
+        return httpServer;
     } catch (error) {
         logger?.error(error);
         throw new Error('silent');
