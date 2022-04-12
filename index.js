@@ -8,7 +8,7 @@ const {version, name} = require('./package.json');
 const cert = require('ut-bus/cert');
 const merge = require('ut-function.merge');
 const got = require('got');
-
+const keys = require('./keys');
 const babelfish = module.exports = async function babelfish(config) {
     const {
         server,
@@ -64,24 +64,7 @@ const babelfish = module.exports = async function babelfish(config) {
                 routes: [
                     '/rpc/{path*}'
                 ],
-                sign: {
-                    kty: 'EC',
-                    d: 'zmnSC_P5Xzefte7vkdINXLAN2LeBgC0S5QTcPO2mI5vo62chc_zHAYhcobGPQGNJ',
-                    use: 'sig',
-                    crv: 'P-384',
-                    x: 'G4JWlybVRkliYWLLFdXDj0CjMjnkXeyiunzQswR3izK-jxvMIYdjVB52Rty5yZN9',
-                    y: 'JndKKF7RQf97idkaLPLsv_jkZPBw-MJFogDqri87vvnpAEf1qyHnQTmK_gAhLAgo',
-                    alg: 'ES384'
-                },
-                encrypt: {
-                    kty: 'EC',
-                    d: 'Irx1Kg78ZY4xZPH_sNMWIe8ifpSB_6f9HZ-JRJiVMae0b_bitAC7Wld03t6KzCdB',
-                    use: 'enc',
-                    crv: 'P-384',
-                    x: 'f-qS0J9HcmWeU2zmDYnjCMwcsEw9ozb0_XE5y2hi2NKUJEyTgeMuWynBpexlhXbS',
-                    y: '22-bZgbttgc4G5lXBsoVMMV5-TYg41FjJY2uGtlJp-MSfJ2agzouRjpzrCihXi7z',
-                    alg: 'ECDH-ES+A256KW'
-                }
+                ...keys
             }
         }, config)
     });

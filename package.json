@@ -16,10 +16,14 @@
     "ut-bus": "^7.47.0"
   },
   "devDependencies": {
-    "tap": "^14.11.0",
-    "ut-tools": "^6.40.6"
+    "tap": "^15.0.9",
+    "ut-port-script": "^7.2.0",
+    "ut-run": "^10.67.0",
+    "ut-tools": "^6.40.7"
   },
-  "peerDependencies": {},
+  "peerDependencies": {
+    "ut-port-script": "^7.2.0"
+  },
   "description": "UT crypto proxy",
   "scripts": {
     "lint": "ut-lint .",
