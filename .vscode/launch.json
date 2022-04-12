@@ -5,14 +5,57 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Launch Program",
-            "program": "${workspaceFolder}/index.js",
+            "name": "Test",
+            "type": "node",
             "request": "launch",
-            "console": "integratedTerminal",
-            "skipFiles": [
-                "<node_internals>/**"
+            "program": "${workspaceRoot}/test/index.test.js",
+            "stopOnEntry": false,
+            "args": [],
+            "cwd": "${workspaceRoot}",
+            "preLaunchTask": null,
+            "runtimeExecutable": null,
+            "runtimeArgs": [
+                "--preserve-symlinks",
+                "--nolazy",
+                "--max_old_space_size=500000"
             ],
-            "type": "node"
+            "env": {
+                "UT_ENV": "test",
+                "NODE_PATH": "dev"
+            },
+            "console": "integratedTerminal",
+            "sourceMaps": false,
+            "outputCapture": "std",
+            "linux": {
+                "console": "integratedTerminal"
+            }
+        },
+        {
+            "name": "Test SNAPSHOT",
+            "type": "node",
+            "request": "launch",
+            "program": "${workspaceRoot}/test/index.test.js",
+            "stopOnEntry": false,
+            "args": [],
+            "cwd": "${workspaceRoot}",
+            "preLaunchTask": null,
+            "runtimeExecutable": null,
+            "runtimeArgs": [
+                "--preserve-symlinks",
+                "--nolazy",
+                "--max_old_space_size=500000"
+            ],
+            "env": {
+                "UT_ENV": "test",
+                "NODE_PATH": "dev",
+                "TAP_SNAPSHOT": "1"
+            },
+            "console": "integratedTerminal",
+            "sourceMaps": false,
+            "outputCapture": "std",
+            "linux": {
+                "console": "integratedTerminal"
+            }
         }
     ]
 }
