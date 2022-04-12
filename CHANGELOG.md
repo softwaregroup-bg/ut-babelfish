@@ -1,3 +1,7 @@
+## [7.48.4](https://github.com/softwaregroup-bg/ut-babelfish/compare/v7.48.3...v7.48.4) (2022-04-12)
+
+
+
 ## [7.48.3](https://github.com/softwaregroup-bg/ut-babelfish/compare/v7.48.2...v7.48.3) (2022-04-11)
 
 
