@@ -74,7 +74,7 @@ const babelfish = module.exports = async function babelfish(config) {
         logger?.info(`Starting version ${version}`);
 
         logger?.info('Init client MLE keys');
-        const jose = require('ut-bus/jose')(mle);
+        const jose = await require('ut-bus/jose')(mle);
 
         logger?.info(`Obtaining ${proxy.uri} MLE keys`);
         const targetKeys = await got(new URL('/rpc/login/.well-known/mle', proxy.uri).href).json();
@@ -135,7 +135,7 @@ const babelfish = module.exports = async function babelfish(config) {
                             output: 'data',
                             allow: ['application/json', 'application/x-www-form-urlencoded']
                         },
-                        handler(request, h) {
+                        async handler(request, h) {
                             let path = '{path}';
                             let onResponse;
                             if (request.headers['content-type'] === 'application/json') {
@@ -154,13 +154,13 @@ const babelfish = module.exports = async function babelfish(config) {
                                     }
                                 }
                                 logger?.info(`Encrypting ${request.path}`);
-                                payload.params = jose.signEncrypt(payload.params, targetKeys.encrypt, keys);
+                                payload.params = await jose.signEncrypt(payload.params, targetKeys.encrypt, keys);
                                 request.payload = JSON.stringify(payload);
                                 onResponse = async function DecryptVerify(e, res, request, h, settings, ttl) {
                                     const payload = await Wreck.read(res, {json: 'strict', gunzip: true});
                                     logger?.info(`Decrypting ${request.path}`);
-                                    if (payload.error) payload.error = jose.decryptVerify(payload.error, targetKeys.sign);
-                                    if (payload.result) payload.result = jose.decryptVerify(payload.result, targetKeys.sign);
+                                    if (payload.error) payload.error = await jose.decryptVerify(payload.error, targetKeys.sign);
+                                    if (payload.result) payload.result = await jose.decryptVerify(payload.result, targetKeys.sign);
                                     const response = h.response(JSON.stringify(payload));
                                     response.headers = res.headers;
                                     delete response.headers['content-length'];
